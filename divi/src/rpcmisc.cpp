@@ -802,6 +802,54 @@ Value getaddressbalance(const Array& params, bool fHelp, CWallet* pwallet)
 
 }
 
+Value getallvaultbalances(const Array& params, bool fHelp, CWallet* pwallet)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "getallvaultbalances start end\n"
+            "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n"
+            "\nArguments:\n"
+            "address: (string) The base58check encoded address\n"
+            "\"addresses\": (JSON object) An object with field '\"addresses\"' holding array\n"
+            "               of base58check encoded addresses\n"
+            "\"only_vaults\" (boolean, optional) Only return utxos spendable by the specified addresses\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"balance\"  (string) The current balance in satoshis\n"
+            "  \"received\"  (string) The total number of satoshis received (including change)\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getaddressbalance", "'\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"'")
+            + HelpExampleCli("getaddressbalance", "'{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}'")
+            + HelpExampleRpc("getaddressbalance", "{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}")
+        );
+
+    const int start = params.size()>0? params[0].get_int() : 0;
+    const int end = params.size()>1? params[1].get_int() : 0;
+    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+    const ChainstateManager::Reference chainstate;
+    if (!TransactionSearchIndexes::GetAllVaultBalances(&chainstate->BlockTree(), addressIndex, start, end)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+    }
+
+    CAmount balance = 0;
+    CAmount received = 0;
+
+    for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
+        if (it->second > 0) {
+            received += it->second;
+        }
+        balance += it->second;
+    }
+
+    Object result;
+    result.push_back(Pair("balance", balance));
+    result.push_back(Pair("received", received));
+
+    return result;
+
+}
+
 bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a,
                 std::pair<CAddressUnspentKey, CAddressUnspentValue> b) {
     return a.second.blockHeight < b.second.blockHeight;

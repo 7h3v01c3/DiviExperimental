@@ -102,6 +102,10 @@ public:
     bool ReadAddressIndex(uint160 addressHash, int type,
                           std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
                           int start = 0, int end = 0) const;
+    bool ReadVaultBalances(
+        std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+        int start,
+        int end) const;
     bool ReadSpentIndex(const CSpentIndexKey &key, CSpentIndexValue &value) const;
     bool ReadAddressUnspentIndex(uint160 addressHash, int type,
                                  std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &vect) const;

@@ -453,6 +453,60 @@ bool CBlockTreeDB::ReadAddressIndex(
     return true;
 }
 
+
+bool CBlockTreeDB::ReadVaultBalances(
+    std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+    int start,
+    int end) const
+{
+    /* It seems that there are no "const iterators" for LevelDB.  Since we
+       only need read operations on it, use a const-cast to get around
+       that restriction.  */
+    boost::scoped_ptr<leveldb::Iterator> pcursor(const_cast<CBlockTreeDB*>(this)->NewIterator());
+    const int type = 3; // Vaults
+
+    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    CAddressIndexKey addressKey;
+    addressKey.type = type;
+    addressKey.hashBytes = uint160(0);
+    if(end > 0 && start > 0 ) addressKey.blockHeight = start;
+    std::pair<char, CAddressIndexKey> indexKey = std::make_pair(DB_ADDRESSINDEX, addressKey);
+    ssKey.reserve(ssKey.GetSerializeSize(indexKey));
+    ssKey << indexKey;
+
+    leveldb::Slice slKey(&ssKey[0], ssKey.size());
+    pcursor->Seek(slKey);
+
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        std::pair<char,CAddressIndexKey> key;
+        if (GetKey(pcursor->key(), key) && key.first == DB_ADDRESSINDEX && key.second.type == static_cast<unsigned>(type))
+        {
+            if (end > 0 && key.second.blockHeight > end)
+            {
+                break;
+            }
+
+            try{
+                leveldb::Slice slValue = pcursor->value();
+                CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+                CAmount nValue;
+                ssValue >> nValue;
+
+                addressIndex.push_back(make_pair(key.second, nValue));
+                pcursor->Next();
+            } catch (const std::exception&) {
+                return error("failed to get address index value");
+            }
+        } else {
+            break;
+        }
+    }
+
+    return true;
+}
+
+
 bool CBlockTreeDB::ReadSpentIndex(const CSpentIndexKey &key, CSpentIndexValue &value) const {
     return Read(make_pair(DB_SPENTINDEX, key), value);
 }

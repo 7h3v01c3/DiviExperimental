@@ -6,6 +6,11 @@
 class CBlockTreeDB;
 namespace TransactionSearchIndexes
 {
+    bool GetAllVaultBalances(
+        const CBlockTreeDB* pblocktree,
+        std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+        int start = 0,
+        int end = 0);
     bool GetAddressIndex(
         const CBlockTreeDB* pblocktree,
         uint160 addressHash,

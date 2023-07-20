@@ -143,7 +143,7 @@ extern json_spirit::Value getaddressutxos(const json_spirit::Array& params, bool
 extern json_spirit::Value clearbanned(const json_spirit::Array& params, bool fHelp, CWallet* pwallet);
 extern json_spirit::Value listbanned(const json_spirit::Array& params, bool fHelp, CWallet* pwallet);
 extern json_spirit::Value getstakingstatus(const json_spirit::Array& params, bool fHelp, CWallet* pwallet);
-
+extern json_spirit::Value getallvaultbalances(const json_spirit::Array& params, bool fHelp, CWallet* pwallet);
 
 using namespace boost;
 using namespace boost::asio;

@@ -20,6 +20,21 @@ bool TransactionSearchIndexes::GetAddressIndex(
     return true;
 }
 
+bool TransactionSearchIndexes::GetAllVaultBalances(
+    const CBlockTreeDB* pblocktree,
+    std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+    int start,
+    int end)
+{
+    if (!pblocktree->GetAddressIndexing())
+        return error("address index not enabled");
+
+    if (!pblocktree->ReadVaultBalances(addressIndex, start, end))
+        return error("unable to get txids for vaults");
+
+    return true;
+}
+
 bool TransactionSearchIndexes::GetAddressUnspent(
     const CBlockTreeDB* pblocktree,
     uint160 addressHash,
